@@ -2,8 +2,6 @@
 
 import { Authenticated, Unauthenticated } from 'convex/react'
 import { SignInButton, UserButton } from '@clerk/nextjs'
-import { useQuery } from 'convex/react'
-import { api } from '../convex/_generated/api'
 import SyncUser from '../components/SyncUser'
 
 export default function Home() {
@@ -22,6 +20,15 @@ export default function Home() {
 }
 
 function Content() {
-  const messages = useQuery(api.messages.getForCurrentUser)
-  return <div>Authenticated content: {messages?.length}</div>
+  return (
+    <main className="min-h-screen p-8">
+      <h1 className="text-4xl font-bold mb-4">WattWise</h1>
+      <p className="text-lg text-gray-600">
+        Welcome to your electricity usage dashboard!
+      </p>
+      <p className="mt-4 text-sm text-gray-500">
+        Add appliances to start tracking your power consumption.
+      </p>
+    </main>
+  )
 }
