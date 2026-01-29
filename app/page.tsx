@@ -3,6 +3,8 @@
 import { Authenticated, Unauthenticated } from 'convex/react'
 import { SignInButton, UserButton } from '@clerk/nextjs'
 import SyncUser from '../components/SyncUser'
+import AppliancesPage from './appliances/page'
+import BudgetsPage from './budgets/page'
 
 export default function Home() {
   return (
@@ -11,6 +13,8 @@ export default function Home() {
         <UserButton />
         <SyncUser />
         <Content />
+        <AppliancesPage />
+        <BudgetsPage />
       </Authenticated>
       <Unauthenticated>
         <SignInButton />
@@ -30,5 +34,8 @@ function Content() {
         Add appliances to start tracking your power consumption.
       </p>
     </main>
+
   )
 }
+
+
