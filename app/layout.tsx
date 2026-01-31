@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: 'WattWise',
   description: 'WattWise is an electricity usage dashboard that helps users track their daily power consumption, estimate their monthly bill, and compare usage trends over time.',
 }
-
+// Clerk publishable key for client-side usage
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 export default function RootLayout({
