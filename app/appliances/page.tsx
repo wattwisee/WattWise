@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { applianceList } from '@/convex/appliances' 
+import { applianceList } from '../lib/appliances'
 
 export default function AppliancesPage() {
 
