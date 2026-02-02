@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WattWise - Energy Consumption Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        :root {
+            --primary: #00a86b;
+            --primary-dark: #008f5c;
+            --secondary: #3a86ff;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e1e5e9;
+            --danger: #ff6b6b;
+            --warning: #ffd166;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            font-size: 28px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.9;
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 60px 20px;
+            text-align: center;
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            margin: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 20px;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            color: var(--text-light);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 168, 107, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--light-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .card-subtext {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: var(--border);
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 5px;
+            width: 72%;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        /* Budget Section */
+        .budget-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .budget-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        /* Appliance Breakdown */
+        .appliance-list {
+            margin-top: 20px;
+        }
+
+        .appliance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .appliance-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .appliance-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background-color: #e8f5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .appliance-name {
+            font-weight: 600;
+        }
+
+        .appliance-usage {
+            text-align: right;
+        }
+
+        .usage-value {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .usage-percent {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 60px 0;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 30px 20px;
+            border-radius: 16px;
+            background-color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background-color: #e8f5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 30px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 60px 20px 30px;
+            margin-top: 60px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column a {
+            color: #cccccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: white;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>WattWise</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#appliances">Appliances</a></li>
+                    <li><a href="#budget">Budget</a></li>
+                    <li><a href="#analytics">Analytics</a></li>
+                </ul>
+            </nav>
+            <div class="user-menu">
+                <div class="avatar">JD</div>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Master Your Energy</h1>
+            <p>Take control of your electricity bills with real-time tracking, appliance-level breakdown, and smart cost predictions. Stop guessing and start saving.</p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="showDemo()">
+                    <i class="fas fa-play-circle"></i> View Demo
+                </button>
+                <button class="btn btn-secondary" onclick="startMonitoring()">
+                    Start Monitoring Free
+                </button>
+            </div>
+        </section>
+
+        <!-- Dashboard -->
+        <section id="dashboard">
+            <h2 style="margin: 40px 0 20px; color: var(--primary);">Energy Dashboard</h2>
+            <div class="dashboard-grid">
+                <!-- Total Usage -->
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Total Usage</h3>
+                        <i class="fas fa-chart-line" style="color: var(--primary); font-size: 24px;"></i>
+                    </div>
+                    <div class="card-value" id="totalUsage">855 kWh</div>
+                    <div class="card-subtext">This month (Calculated)</div>
+                </div>
+
+                <!-- Current Cost -->
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Current Cost</h3>
+                        <i class="fas fa-dollar-sign" style="color: var(--primary); font-size: 24px;"></i>
+                    </div>
+                    <div class="card-value" id="currentCost">$128.25</div>
+                    <div class="card-subtext">Based on usage</div>
+                </div>
+
+                <!-- Predicted Total -->
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Predicted Total</h3>
+                        <i class="fas fa-crystal-ball" style="color: var(--primary); font-size: 24px;"></i>
+                    </div>
+                    <div class="card-value" id="predictedTotal">941 kWh</div>
+                    <div class="card-subtext">End of month forecast</div>
+                </div>
+
+                <!-- Days Remaining -->
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Days Remaining</h3>
+                        <i class="fas fa-calendar-alt" style="color: var(--primary); font-size: 24px;"></i>
+                    </div>
+                    <div class="card-value" id="daysRemaining">5</div>
+                    <div class="card-subtext">Until end of month</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts & Budget -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin: 40px 0;">
+            <!-- Left Column: Charts -->
+            <div>
+                <div class="card">
+                    <h3 class="card-title">Daily Usage Overview</h3>
+                    <p class="card-subtext">Electricity consumption for the past 30 days</p>
+                    <div class="chart-container">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h3 class="card-title">Appliance Breakdown</h3>
+                    <div class="appliance-list" id="applianceList">
+                        <!-- Appliance items will be populated by JS -->
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="clearAppliances()" style="flex: 1;">
+                            <i class="fas fa-trash-alt"></i> Clear All
+                        </button>
+                        <button class="btn btn-primary" onclick="addAppliance()" style="flex: 1;">
+                            <i class="fas fa-plus"></i> Add Appliance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Budget -->
+            <div>
+                <div class="card">
+                    <h3 class="card-title">Budget Tracker</h3>
+                    <p class="card-subtext">Set a monthly budget to track your spending</p>
+                    
+                    <div style="margin: 25px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Budget Progress</span>
+                            <span><span id="budgetUsed">72</span>% used</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="budgetProgress"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <span>$0</span>
+                            <span id="currentBudget">$150</span>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 25px 0 15px;">Set Monthly Budget</h4>
+                    <div class="budget-controls">
+                        <input type="number" class="budget-input" id="budgetInput" placeholder="Enter budget amount" value="150">
+                        <button class="btn btn-primary" onclick="updateBudget()">
+                            Update
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <h4>Usage by Appliance</h4>
+                        <div class="chart-container">
+                            <canvas id="applianceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h3 class="card-title">End of Month Prediction</h3>
+                    <div style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Current Month Usage</span>
+                            <span style="font-weight: 600;">855 kWh</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Predicted Total</span>
+                            <span style="font-weight: 600; color: var(--primary);">941 kWh</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>+ Expected</span>
+                            <span style="font-weight: 600; color: var(--danger);">+86.0 kWh</span>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Rate per kWh</span>
+                            <span>$0.150</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Current Cost</span>
+                            <span>$128.25</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Predicted Cost</span>
+                            <span style="font-weight: 600;">$141.15</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Difference</span>
+                            <span style="color: var(--danger); font-weight: 600;">+$12.90</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <h3>Appliance Tracking</h3>
+                <p>Monitor individual appliances to identify power-hungry devices and optimize their usage schedules.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Budget Alerts</h3>
+                <p>Set monthly budgets and get notified before you exceed them with our intelligent prediction system.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Smart Reports</h3>
+                <p>View daily and monthly breakdowns with intuitive charts that make understanding your bill simple.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-column">
+                <h3>WattWise</h3>
+                <p style="color: #cccccc; margin-top: 10px;">Empowering households to smarter energy consumption since 2024.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Product</h3>
+                <ul>
+                    <li><a href="#">Features</a></li>
+                    <li><a href="#">Pricing</a></li>
+                    <li><a href="#">API</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Company</h3>
+                <ul>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Careers</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2024 WattWise Inc. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Sample Data
+        const appliances = [
+            { name: "Air Conditioner", usage: 325, cost: 48.75, percentage: 38, icon: "snowflake" },
+            { name: "Refrigerator", usage: 180, cost: 27.00, percentage: 21, icon: "temperature-low" },
+            { name: "Television", usage: 95, cost: 14.25, percentage: 11, icon: "tv" },
+            { name: "Washing Machine", usage: 120, cost: 18.00, percentage: 14, icon: "tshirt" },
+            { name: "Lighting", usage: 135, cost: 20.25, percentage: 16, icon: "lightbulb" }
+        ];
+
+        const dailyUsage = [65, 59, 80, 81, 56, 55, 70, 75, 72, 68, 60, 65, 70, 78, 82, 85, 88, 90, 87, 83, 80, 78, 75, 72, 68, 65, 70, 75, 78, 80];
+        const predictedUsage = [60, 62, 75, 78, 60, 58, 72, 78, 75, 70, 65, 68, 72, 80, 85, 88, 90, 92, 90, 85, 82, 80, 78, 75, 72, 68, 72, 78, 82, 85];
+
+        let monthlyBudget = 150;
+
+        // Initialize Charts
+        let usageChart, applianceChart;
+
+        function initializeCharts() {
+            // Daily Usage Chart
+            const usageCtx = document.getElementById('usageChart').getContext('2d');
+            usageChart = new Chart(usageCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `Jan ${i+1}`),
+                    datasets: [
+                        {
+                            label: 'Actual Usage',
+                            data: dailyUsage,
+                            borderColor: '#00a86b',
+                            backgroundColor: 'rgba(0, 168, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Predicted',
+                            data: predictedUsage,
+                            borderColor: '#3a86ff',
+                            backgroundColor: 'rgba(58, 134, 255, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'kWh'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Appliance Chart
+            const applianceCtx = document.getElementById('applianceChart').getContext('2d');
+            applianceChart = new Chart(applianceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: appliances.map(a => a.name),
+                    datasets: [{
+                        data: appliances.map(a => a.percentage),
+                        backgroundColor: [
+                            '#00a86b',
+                            '#3a86ff',
+                            '#ff6b6b',
+                            '#ffd166',
+                            '#9d4edd'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate Appliance List
+        function populateApplianceList() {
+            const container = document.getElementById('applianceList');
+            container.innerHTML = '';
+            
+            appliances.forEach(appliance => {
+                const item = document.createElement('div');
+                item.className = 'appliance-item';
+                item.innerHTML = `
+                    <div class="appliance-info">
+                        <div class="appliance-icon">
+                            <i class="fas fa-${appliance.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="appliance-name">${appliance.name}</div>
+                            <div style="color: var(--text-light); font-size: 14px;">${appliance.percentage}% of total usage</div>
+                        </div>
+                    </div>
+                    <div class="appliance-usage">
+                        <div class="usage-value">${appliance.usage} kWh</div>
+                        <div class="usage-percent">$${appliance.cost} this month</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Update Budget
+        function updateBudget() {
+            const input = document.getElementById('budgetInput');
+            const budget = parseInt(input.value);
+            
+            if (budget && budget > 0) {
+                monthlyBudget = budget;
+                document.getElementById('currentBudget').textContent = `$${budget}`;
+                
+                // Calculate progress (72% of budget used based on current cost $128.25)
+                const progress = Math.min(100, Math.round((128.25 / budget) * 100));
+                document.getElementById('budgetUsed').textContent = progress;
+                document.getElementById('budgetProgress').style.width = `${progress}%`;
+                
+                alert(`Budget updated to $${budget}`);
+            } else {
+                alert('Please enter a valid budget amount');
+            }
+        }
+
+        // Clear Appliances
+        function clearAppliances() {
+            if (confirm('Are you sure you want to clear all appliances?')) {
+                appliances.length = 0;
+                populateApplianceList();
+                applianceChart.data.datasets[0].data = [];
+                applianceChart.update();
+                alert('All appliances cleared');
+            }
+        }
+
+        // Add Appliance
+        function addAppliance() {
+            const name = prompt('Enter appliance name:');
+            if (name) {
+                const usage = Math.floor(Math.random() * 300) + 50;
+                const cost = (usage * 0.15).toFixed(2);
+                const percentage = Math.floor(Math.random() * 20) + 5;
+                const icons = ['plug', 'blender', 'laptop', 'fan', 'oven', 'microwave'];
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                
+                appliances.push({
+                    name,
+                    usage,
+                    cost,
+                    percentage,
+                    icon
+                });
+                
+                populateApplianceList();
+                
+                // Update chart
+                applianceChart.data.labels.push(name);
+                applianceChart.data.datasets[0].data.push(percentage);
+                applianceChart.data.datasets[0].backgroundColor.push(getRandomColor());
+                applianceChart.update();
+                
+                alert(`${name} added successfully!`);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#00a86b', '#3a86ff', '#ff6b6b', '#ffd166', '#9d4edd', '#ff9e00', '#06d6a0', '#118ab2'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Demo and Monitoring Functions
+        function showDemo() {
+            alert('Demo mode activated! You can now interact with all features.');
+            document.getElementById('totalUsage').textContent = '720 kWh';
+            document.getElementById('currentCost').textContent = '$108.00';
+            document.getElementById('predictedTotal').textContent = '820 kWh';
+            document.getElementById('daysRemaining').textContent = '10';
+        }
+
+        function startMonitoring() {
+            alert('Starting free monitoring... Redirecting to sign up page.');
+            // In a real app, this would redirect to signup
+            window.location.href = '#';
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            populateApplianceList();
+            updateBudget(); // Set initial budget progress
+        });
+    </script>
+</body>
+</html>
