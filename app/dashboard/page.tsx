@@ -10,8 +10,21 @@ import Dashboard from '@/src/components/Dashboard'
 export default function DashboardPage() {
   const { isSignedIn } = useUser()
   const router = useRouter()
-  const appliances = useQuery(api.appliances.getUserAppliances)
+  const appliancesQuery = useQuery(api.appliances.getUserAppliances)
   const budgets = useQuery(api.budgets.getBudget)
+
+  // Transform Convex appliances to Dashboard format
+  const transformedAppliances = (appliancesQuery || []).map((a: any) => ({
+    _id: a._id,
+    id: a._id,
+    name: a.name,
+    type: a.type_of_appliance || a.type,
+    watts: a.wattage || a.watts || 0,
+    hoursPerDay: a.hoursPerDay,
+    daysPerWeek: 7,
+    usage: Math.round(((a.wattage || a.watts || 0) * a.hoursPerDay * 7) / 1000),
+    cost: Math.round(((a.wattage || a.watts || 0) * a.hoursPerDay * 7 * 0.15) * 100) / 100
+  }))
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -37,7 +50,7 @@ export default function DashboardPage() {
 
   return (
     <Dashboard
-      appliances={appliances || []}
+      appliances={transformedAppliances}
       onAddAppliance={handleAddAppliance}
       onRemoveAppliance={handleRemoveAppliance}
       onClearAppliances={handleClearAppliances}
