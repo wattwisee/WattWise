@@ -23,11 +23,13 @@ export const applianceList = [
 export const getUserAppliances = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const clerkUserId = await getAuthUserId(ctx);
+    if (!clerkUserId) {
+      return [];
+    }
     return await ctx.db
       .query("appliances")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .withIndex("by_userId", (q) => q.eq("userId", clerkUserId))
       .collect();
   },
 });
@@ -37,23 +39,16 @@ export const addAppliance = mutation({
     name: v.string(),
     wattage: v.number(),
     hoursPerDay: v.number(),
-    type_of_appliance: v.string(),
-    quantity: v.number(),
+    type_of_appliance: v.optional(v.string()),
+    quantity: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const clerkId = await getAuthUserId(ctx);  
-    if (!clerkId) throw new Error("Not authenticated");
-    
- 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .first();
-    
-    if (!user) throw new Error("User not found");
-    
+    const clerkUserId = await getAuthUserId(ctx);
+    if (!clerkUserId) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db.insert("appliances", {
-      userId: user._id,  //user._id is yung sa convex users
+      userId: clerkUserId,
       name: args.name,
       wattage: args.wattage,
       hoursPerDay: args.hoursPerDay,
@@ -67,6 +62,33 @@ export const addAppliance = mutation({
 export const deleteAppliance = mutation({
   args: { id: v.id("appliances") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    const clerkUserId = await getAuthUserId(ctx);
+    if (!clerkUserId) {
+      throw new Error("Not authenticated");
+    }
+    // Verify the appliance belongs to the user before deleting
+    const appliance = await ctx.db.get(args.id);
+    if (appliance && appliance.userId === clerkUserId) {
+      await ctx.db.delete(args.id);
+    }
+  },
+});
+
+export const clearAllAppliances = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const clerkUserId = await getAuthUserId(ctx);
+    if (!clerkUserId) {
+      throw new Error("Not authenticated");
+    }
+    // Get all appliances for this user and delete them
+    const appliances = await ctx.db
+      .query("appliances")
+      .withIndex("by_userId", (q) => q.eq("userId", clerkUserId))
+      .collect();
+    
+    for (const appliance of appliances) {
+      await ctx.db.delete(appliance._id);
+    }
   },
 });

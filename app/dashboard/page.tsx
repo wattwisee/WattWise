@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
@@ -12,6 +12,9 @@ export default function DashboardPage() {
   const router = useRouter()
   const appliancesQuery = useQuery(api.appliances.getUserAppliances)
   const budgets = useQuery(api.budgets.getBudget)
+  const addApplianceMutation = useMutation(api.appliances.addAppliance)
+  const deleteApplianceMutation = useMutation(api.appliances.deleteAppliance)
+  const clearAllAppliancesMutation = useMutation(api.appliances.clearAllAppliances)
 
   // Transform Convex appliances to Dashboard format
   const transformedAppliances = (appliancesQuery || []).map((a: any) => ({
@@ -36,16 +39,40 @@ export default function DashboardPage() {
     return null
   }
 
-  const handleAddAppliance = (appliance: any) => {
+  const handleAddAppliance = async (appliance: any) => {
     console.log('Add appliance:', appliance)
+    try {
+      await addApplianceMutation({
+        name: appliance.name,
+        wattage: appliance.watts,
+        hoursPerDay: appliance.hoursPerDay,
+        type_of_appliance: appliance.type || appliance.category,
+        quantity: 1,
+      })
+      console.log('Appliance saved to Convex!')
+    } catch (error) {
+      console.error('Failed to save appliance:', error)
+    }
   }
 
-  const handleRemoveAppliance = (id: string) => {
+  const handleRemoveAppliance = async (id: string) => {
     console.log('Remove appliance:', id)
+    try {
+      await deleteApplianceMutation({ id: id as any })
+    } catch (error) {
+      console.error('Failed to remove appliance:', error)
+    }
   }
 
-  const handleClearAppliances = () => {
+  const handleClearAppliances = async () => {
     console.log('Clear all appliances')
+    if (window.confirm('Are you sure you want to remove all appliances?')) {
+      try {
+        await clearAllAppliancesMutation()
+      } catch (error) {
+        console.error('Failed to clear appliances:', error)
+      }
+    }
   }
 
   return (

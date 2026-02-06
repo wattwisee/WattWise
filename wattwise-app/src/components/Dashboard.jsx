@@ -1,13 +1,29 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import '../styles/app.css';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import ApplianceManager from './ApplianceManager.jsx';
 
-const Dashboard = ({ appliances, onAddAppliance, onRemoveAppliance, onClearAppliances }) => {
+const Dashboard = ({ appliances: initialAppliances, onAddAppliance, onRemoveAppliance, onClearAppliances }) => {
   const navigate = useNavigate();
-  const [budget, setBudget] = useState(200);
+  
+  // Convex queries
+  const appliancesData = useQuery(api.appliances.getUserAppliances);
+  const userBudget = useQuery(api.budgets.getBudget);
+  
+  // Convex mutations
+  const addAppliance = useMutation(api.appliances.addAppliance);
+  const deleteAppliance = useMutation(api.appliances.deleteAppliance);
+  const saveBudget = useMutation(api.budgets.setBudget);
+  
+  // Use Convex data if available, fallback to props
+  const appliances = appliancesData || initialAppliances || [];
+  
+  // Budget state with Convex data
+  const [budget, setBudgetState] = useState(userBudget?.[0]?.budget || 200);
   const [showBudgetWarning, setShowBudgetWarning] = useState(false);
-
+  
   // Calculate stats DYNAMICALLY from appliances
   const stats = useMemo(() => {
     const totalUsage = appliances.reduce((sum, a) => sum + a.usage, 0);
@@ -53,8 +69,55 @@ const Dashboard = ({ appliances, onAddAppliance, onRemoveAppliance, onClearAppli
     navigate('/login');
   };
 
-  const handleSetBudget = () => {
-    alert(`Budget set to $${budget}`);
+  const handleAddAppliance = async (appliance) => {
+    console.log('handleAddAppliance called with:', appliance);
+    alert('Adding appliance: ' + appliance.name);
+    
+    // Call local handler if exists
+    if (onAddAppliance) {
+      console.log('Calling onAddAppliance prop');
+      onAddAppliance(appliance);
+    }
+    
+    // Save to Convex
+    try {
+      console.log('Adding appliance to Convex:', appliance);
+      const result = await addAppliance({
+        name: appliance.name,
+        wattage: appliance.watts,
+        hoursPerDay: appliance.hoursPerDay,
+        type_of_appliance: appliance.type,
+      });
+      console.log('Appliance added successfully:', result);
+    } catch (error) {
+      console.error('Error saving appliance:', error.message);
+      alert('Error saving appliance: ' + error.message);
+    }
+  };
+
+  const handleRemoveAppliance = async (id) => {
+    // Call local handler if exists
+    if (onRemoveAppliance) {
+      onRemoveAppliance(id);
+    }
+    
+    // Delete from Convex (use the id directly if it's from Convex)
+    try {
+      await deleteAppliance({ id });
+    } catch (error) {
+      console.error('Error deleting appliance:', error);
+    }
+  };
+
+  const handleSetBudget = async () => {
+    // Save budget to Convex
+    try {
+      await saveBudget({ budget });
+      alert(`Budget set to ${budget}`);
+    } catch (error) {
+      console.error('Error saving budget:', error);
+      alert(`Budget set to ${budget} (local only)`);
+    }
   };
 
   return (
@@ -703,11 +766,11 @@ const Dashboard = ({ appliances, onAddAppliance, onRemoveAppliance, onClearAppli
 {/* Appliance Manager Section */}
 <section className="dashboard-section">
   <ApplianceManager 
-  appliances={appliances}
-  onAddAppliance={onAddAppliance}
-  onRemoveAppliance={onRemoveAppliance}
-  onClearAllAppliances={onClearAppliances} // CHANGED PROP NAME
-/>
+    appliances={appliances}
+    onAddAppliance={handleAddAppliance}
+    onRemoveAppliance={handleRemoveAppliance}
+    onClearAllAppliances={onClearAppliances}
+  />
 </section>
         </div>
       </main>

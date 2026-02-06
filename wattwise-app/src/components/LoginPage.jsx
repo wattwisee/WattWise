@@ -1,16 +1,39 @@
 import React, { useState } from 'react';
 import '../styles/app.css';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSignIn } from "@clerk/clerk-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { signIn, isLoaded } = useSignIn();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For demo, just navigate to dashboard
-    navigate('/dashboard');
+    setError('');
+
+    if (!isLoaded) {
+      setError('Authentication not loaded');
+      return;
+    }
+
+    try {
+      const result = await signIn.create({
+        identifier: email,
+        password: password,
+      });
+
+      if (result.status === 'complete') {
+        navigate('/dashboard');
+      } else {
+        setError('Sign in requires additional steps');
+      }
+    } catch (err) {
+      console.error('Sign in error:', err);
+      setError(err.message || 'Failed to sign in');
+    }
   };
 
   return (
@@ -67,6 +90,17 @@ const LoginPage = () => {
               <p>Enter your credentials to access your dashboard</p>
             </div>
 
+            {error && (
+              <div className="error-message" style={{ 
+                backgroundColor: '#ffebee', 
+                color: '#c62828',
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '15px'
+              }}>
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
                 <label htmlFor="email">Email</label>

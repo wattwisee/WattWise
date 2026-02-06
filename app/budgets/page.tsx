@@ -5,7 +5,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 export default function BudgetsPage() {
-  const budgets = useQuery(api.budgets.getBudget)
+  const budgetData = useQuery(api.budgets.getBudget)
   const addBudget = useMutation(api.budgets.addBudget)
   
   const [budget, setBudget] = useState(0)
@@ -32,7 +32,7 @@ export default function BudgetsPage() {
       <button onClick={() => addBudget({
         budget,
         selected_provider,
-        calculated_kWh_per_appliance: {},  // Fill this
+        calculated_kWh_per_appliance: {},
         monthly_total_kWh: 0,
         estimated_bill: 0,
         rate_used: 0,
@@ -41,11 +41,11 @@ export default function BudgetsPage() {
         Set Budget
       </button>
 
-      {budgets?.map((b: { _id: any; budget: number; selected_provider: string }) => (
-        <div key={b._id}>
-            Budget: PHP {b.budget} - {b.selected_provider}
+      {budgetData && (
+        <div>
+          Budget: PHP {budgetData.budget} - {budgetData.selected_provider}
         </div>
-        ))}
+      )}
 
     </div>
   )

@@ -10,7 +10,6 @@
 
 import type * as appliances from "../appliances.js";
 import type * as budgets from "../budgets.js";
-import type * as gemini from "../gemini.js";
 import type * as users from "../users.js";
 
 import type {
@@ -22,7 +21,6 @@ import type {
 declare const fullApi: ApiFromModules<{
   appliances: typeof appliances;
   budgets: typeof budgets;
-  gemini: typeof gemini;
   users: typeof users;
 }>;
 

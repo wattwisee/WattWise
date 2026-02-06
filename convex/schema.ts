@@ -10,8 +10,9 @@ const schema = defineSchema({
     email: v.string(),
   })
     .index("by_clerkId", ["clerkId"]),
+  
   appliances: defineTable({
-    userId: v.id("users"),
+    userId: v.optional(v.string()), // Store Clerk user ID as string
     name: v.string(), 
     wattage: v.number(),
     hoursPerDay: v.number(),
@@ -22,7 +23,7 @@ const schema = defineSchema({
 
   
   budgets: defineTable({
-    userId: v.id("users"),
+    userId: v.optional(v.string()), // Store Clerk user ID as string
     budget: v.number(),
     calculated_kWh_per_appliance: v.any(),
     monthly_total_kWh: v.number(),
